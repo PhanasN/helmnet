@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  helmnet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helmnet-detector
+    image: helmnet:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src
+      # Mount data directories
+      - ./data:/app/data
+      # Mount models directory
+      - ./models:/app/models
+      # Mount logs
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - MODEL_PATH=/app/models/yolov8n.pt
+      - CONFIDENCE_THRESHOLD=0.5
+    command: uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    networks:
+      - helmnet-network
+
+  # Optional: Add a database service if needed
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: helmnet-db
+  #   environment:
+  #     - POSTGRES_USER=helmnet
+  #     - POSTGRES_PASSWORD=helmnet123
+  #     - POSTGRES_DB=helmnet
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - helmnet-network
+
+networks:
+  helmnet-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
